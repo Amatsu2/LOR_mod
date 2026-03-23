@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<BookUseXmlRoot xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Version>1.1</Version>
+  <BookUse ID="1">
+    <Name>ユイ工房の本</Name>
+    <TextId />
+    <BookIcon>Yui_workshop</BookIcon>
+    <Chapter>6</Chapter>
+    <BookValue>0</BookValue>
+    <DropItem Type="Equip">10000001</DropItem>
+    <DropItem Type="Equip">10000004</DropItem>
+  </BookUse>
+  <BookUse ID="2">
+    <Name>シキの本</Name>
+    <TextId />
+    <BookIcon>Yui_workshop</BookIcon>
+    <Chapter>6</Chapter>
+    <BookValue>0</BookValue>
+    <DropItem Type="Equip">10000003</DropItem>
+  </BookUse>
+  <BookUse ID="3">
+    <Name>ユイの本</Name>
+    <TextId />
+    <BookIcon>Yui_workshop</BookIcon>
+    <Chapter>6</Chapter>
+    <BookValue>0</BookValue>
+    <DropItem Type="Equip">10000002</DropItem>
+  </BookUse>
+  <BookUse ID="4">
+    <Name>ユイ工房の技術書</Name>
+    <TextId />
+    <BookIcon>Yui_workshop</BookIcon>
+    <Chapter>6</Chapter>
+    <BookValue>0</BookValue>
+    <DropItem Type="Equip">10000007</DropItem>
+    <DropItem Type="Equip">10000006</DropItem>
+    <DropItem Type="Equip">10000005</DropItem>
+  </BookUse>
+</BookUseXmlRoot>

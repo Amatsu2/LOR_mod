@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<BattleCardAbilityDescRoot xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <BattleCardAbility ID="tsu00UniteC1NextPower">
+    <Desc>[結束ページ][戦闘開始時]今回の幕の間、他の味方全体に「結束ページを使用時、次の幕にパワー1を得る(重複しない)」を追加」</Desc>
+  </BattleCardAbility>
+  <BattleCardAbility ID="tsu00UniteC2NextEndurance">
+    <Desc>[結束ページ][戦闘開始時]今回の幕の間、他の味方全体に「結束ページを使用時、次の幕に忍耐1を得る(重複しない)」を付与</Desc>
+  </BattleCardAbility>
+  <BattleCardAbility ID="tsu00UniteC3NextProtection">
+    <Desc>[結束ページ][戦闘開始時]今回の幕の間、他の味方全体に「結束ページを使用時、次の幕に保護1を得る(重複しない)」を付与</Desc>
+  </BattleCardAbility>
+  <BattleCardAbility ID="tsu00UniteC4NextBreakProtection">
+    <Desc>[結束ページ][戦闘開始時]今回の幕の間、他の味方全体に「結束ページを使用時、次の幕に混乱保護1を得る(重複しない)」を付与</Desc>
+  </BattleCardAbility>
+  <BattleCardAbility ID="tsu00UniteC5Preparation">
+    <Desc>[結束ページ][戦闘開始時]今回の幕の間、他の味方全体に「結束ページを使用時、そのページに反撃ダイス(3-7)を追加(重複しない)」を付与</Desc>
+  </BattleCardAbility>
+  <BattleCardAbility ID="tsu00UniteC6DiscardDraw">
+    <Desc>[結束ページ][戦闘開始時]今回の幕の間、他の味方全員に「結束ページを使用時、ページをランダムに1枚捨て、次の幕の開始時にページを2枚引く(重複しない)」を付与」</Desc>
+  </BattleCardAbility>
+  <BattleCardAbility ID="tsu00UniteC7highlander">
+    <Desc>[結束ページ][戦闘開始時]今回の幕の間、他の味方全員に「結束ページを使用時、唯一状態なら全ダイス威力+2(重複しない)」を付与」</Desc>
+  </BattleCardAbility>
+  <BattleCardAbility ID="tsu00UniteC9HealLightdraw">
+    <Desc>[結束ページ][戦闘開始時]今回の幕の間、他の味方全員に「結束ページを使用時、光1回復、ページ1枚を引く(重複しない)」を付与</Desc>
+  </BattleCardAbility>
+  <BattleCardAbility ID="tsu00UniteC10heallight">
+    <Desc>[結束ページ][使用時]光1回復</Desc>
+  </BattleCardAbility>
+  <BattleCardAbility ID="tsu00D1randomprptection">
+    <Desc>[的中時]ランダムな味方1名に今回の幕に保護1を付与</Desc>
+  </BattleCardAbility>
+  <BattleCardAbility ID="tsu00D2randombreakprptection">
+    <Desc>[的中時]ランダムな味方1名に今回の幕に混乱保護1を付与</Desc>
+  </BattleCardAbility>
+</BattleCardAbilityDescRoot>

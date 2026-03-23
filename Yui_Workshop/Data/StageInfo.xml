@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<StageXmlRoot xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Version>1.1</Version>
+  <Stage id="1">
+    <Name>ユイ工房</Name>
+    <Wave>
+      <Unit>1</Unit>
+      <Unit>1</Unit>
+      <Unit>4</Unit>
+      <Unit>4</Unit>
+      <Formation>23</Formation>
+      <FormationType>Default</FormationType>
+      <AvailableUnit>5</AvailableUnit>
+      <emotionCardList />
+    </Wave>
+    <Wave>
+      <Unit>2</Unit>
+      <Unit>3</Unit>
+      <Formation>1</Formation>
+      <FormationType>Default</FormationType>
+      <AvailableUnit>5</AvailableUnit>
+      <emotionCardList />
+    </Wave>
+    <StageType>Invitation</StageType>
+    <FloorNum>1</FloorNum>
+    <Chapter>6</Chapter>
+    <Invitation Combine="BookValue">
+      <Value>6</Value>
+      <Num>2</Num>
+    </Invitation>
+    <Condition>
+      <Level>0</Level>
+    </Condition>
+    <Story Condition="Start">__No Story__</Story>
+    <Story Condition="End">__No Story__</Story>
+    <IsChapterLast>false</IsChapterLast>
+    <StoryType>Yui_workshop</StoryType>
+    <invitationtype>false</invitationtype>
+  </Stage>
+  <Stage id="2">
+    <Name>ユイ工房:hard</Name>
+    <Wave>
+      <Unit>2</Unit>
+      <Unit>3</Unit>
+      <Unit>5</Unit>
+      <Unit>5</Unit>
+      <Formation>36</Formation>
+      <FormationType>Default</FormationType>
+      <AvailableUnit>5</AvailableUnit>
+      <emotionCardList />
+    </Wave>
+    <StageType>Invitation</StageType>
+    <FloorNum>1</FloorNum>
+    <Chapter>6</Chapter>
+    <Invitation Combine="BookValue">
+      <Value>6</Value>
+      <Num>3</Num>
+    </Invitation>
+    <Condition>
+      <Level>0</Level>
+    </Condition>
+    <Story Condition="Start">__No Story__</Story>
+    <Story Condition="End">__No Story__</Story>
+    <IsChapterLast>false</IsChapterLast>
+    <StoryType>Yui_workshop</StoryType>
+    <invitationtype>false</invitationtype>
+  </Stage>
+</StageXmlRoot>

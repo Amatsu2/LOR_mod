@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<BookDescRoot xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <bookDescList>
+    <BookDesc BookID="1">
+      <BookName>ユイ工房2級フィクサーのページ</BookName>
+      <TextList />
+    </BookDesc>
+    <BookDesc BookID="2">
+      <BookName>ユイのページ</BookName>
+      <TextList />
+    </BookDesc>
+    <BookDesc BookID="3">
+      <BookName>シキのページ</BookName>
+      <TextList />
+    </BookDesc>
+    <BookDesc BookID="4">
+      <BookName>ユイ工房3級フィクサーのページ</BookName>
+      <TextList />
+    </BookDesc>
+    <BookDesc BookID="5">
+      <BookName>ユイ工房1級フィクサーのページ</BookName>
+      <TextList />
+    </BookDesc>
+    <BookDesc BookID="10000001">
+      <BookName>ユイ工房2級フィクサーのページ</BookName>
+      <TextList>
+        <Desc />
+      </TextList>
+    </BookDesc>
+    <BookDesc BookID="10000002">
+      <BookName>ユイのページ</BookName>
+      <TextList>
+        <Desc />
+      </TextList>
+    </BookDesc>
+    <BookDesc BookID="10000003">
+      <BookName>シキのページ</BookName>
+      <TextList>
+        <Desc />
+      </TextList>
+    </BookDesc>
+    <BookDesc BookID="10000004">
+      <BookName>ユイ工房3級フィクサーのページ</BookName>
+      <TextList>
+        <Desc />
+      </TextList>
+    </BookDesc>
+    <BookDesc BookID="10000005">
+      <BookName>ユイ工房の技術(帰属専用)</BookName>
+      <TextList>
+        <Desc />
+      </TextList>
+    </BookDesc>
+    <BookDesc BookID="10000006">
+      <BookName>ユイ工房の心得(帰属専用)</BookName>
+      <TextList>
+        <Desc />
+      </TextList>
+    </BookDesc>
+    <BookDesc BookID="10000007">
+      <BookName>ユイ工房1級フィクサーのページ</BookName>
+      <TextList>
+        <Desc />
+      </TextList>
+    </BookDesc>
+  </bookDescList>
+</BookDescRoot>
