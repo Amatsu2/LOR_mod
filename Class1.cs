@@ -1,550 +1,545 @@
-﻿using HarmonyLib;
-using LOR_DiceSystem;
-using LOR_XML;
-using Mod;
-using RedFrogBufUtil;
+﻿using JetBrains.Annotations;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using UnityEngine;
-using カード効果;
-
-namespace 専用ページ
-{
-    public class PostfixPatch_SetXmlInfo
-    {
-        public static void Postfix(BookXmlInfo classInfo, List<DiceCardXmlInfo> ____onlyCards)
-        {
-            if (classInfo.id.packageId == "PID")
-            {
-                ____onlyCards.Clear();
-
-                foreach (int id in classInfo.EquipEffect.OnlyCard)
-                {
-                    LorId lid = new LorId("PID", id);
-
-                    DiceCardXmlInfo info = ItemXmlDataList.instance.GetCardItem(lid);
-
-                    if (info != null)
-                    {
-                        ____onlyCards.Add(info);
-                    }
-                }
-            }
-        }
-    }
-    public class test_Only : ModInitializer///"???_Only"
-    {
-
-        public static string path
-        {
-            get
-            {
-                bool flag = test_Only._path == null;///"???_Only"
-                bool flag2 = flag;
-                bool flag3 = flag2;
-                bool flag4 = flag3;
-                if (flag4)
-                {
-                    test_Only._path = Path.GetDirectoryName(Uri.UnescapeDataString(new UriBuilder(Assembly.GetExecutingAssembly().CodeBase).Path));///"???_Only"
-                }
-                return test_Only._path;///"???_Only"
-            }
-        }
-
-        public override void OnInitializeMod()
-        {
-            Harmony harmony = new Harmony(test_Only.packageId);///"???_Only"
-            harmony.CreateClassProcessor(typeof(test_Only.BookModel_SetXmlInfo)).Patch();///"???_Only"
-            Dictionary<string, BattleEffectText> dictionary = typeof(BattleEffectTextsXmlList).GetField("_dictionary", AccessTools.all).GetValue(Singleton<BattleEffectTextsXmlList>.Instance) as Dictionary<string, BattleEffectText>;
-            dictionary["test_Only"] = new BattleEffectText///"誰か_Only"
-            {
-                ID = "test_Only",///"???_Only"
-                Name = "test専用バトルページ",///"[ここに誰かを記入]専用バトルページ"
-                Desc = "このページはtestのページにのみ装着可能。"///"このページは [ここに誰かを記入]のページにのみ装着可能"
-            };
-            Singleton<ModContentManager>.Instance.GetErrorLogs().RemoveAll((string errorLog) => errorLog.Contains(test_Only.packageId) && errorLog.Contains("The same assembly name already exists"));///"???_Only"
-        }
-
-        public static string packageId = "Gomonkai";///ここにMODのidを記入
-
-        protected static string _path = null;
-
-        public static Dictionary<string, Sprite> ArtWorks = new Dictionary<string, Sprite>();
-
-        [HarmonyPatch(typeof(BookModel), "SetXmlInfo")]
-        public class BookModel_SetXmlInfo
-        {
-            public static void Postfix(BookModel __instance, BookXmlInfo ____classInfo, ref List<DiceCardXmlInfo> ____onlyCards)
-            {
-                bool flag = __instance.BookId.packageId == test_Only.packageId;///"???_Only"
-                bool flag2 = flag;
-                bool flag3 = flag2;
-                bool flag4 = flag3;
-                if (flag4)
-                {
-                    foreach (int id in ____classInfo.EquipEffect.OnlyCard)
-                    {
-                        ____onlyCards.Add(ItemXmlDataList.instance.GetCardItem(new LorId(test_Only.packageId, id), false));///"???_Only"
-                    }
-                }
-            }
-        }
-    }
-}
+using UnityEngine.Assertions.Must;
+using static DiceCardSelfAbility_hanaDiscardDraw;
+using static カード.DiceCardSelfAbility_tsu00UniteC4NextBreakProtection;
+using static カード.DiceCardSelfAbility_tsu00UniteC5Preparation;
 
 namespace ダイス効果
-//public class DiceCardAbility_tsu00D1"ダイス効果名" : DiceCardAbilityBase
 {
+    public class DiceCardAbility_tsu00D1randomprptection : DiceCardAbilityBase
+    {
+        public static string Desc = "[的中時]ランダムな味方1名に今回の幕に保護1を付与";
+        public override string[] Keywords => new string[1] { "Protection_Keyword" };
+        public override void OnSucceedAttack()
+        {
+            foreach (BattleUnitModel item in BattleObjectManager.instance.GetAliveList_random(base.owner.faction, 2))
+            {
+                item.bufListDetail.AddKeywordBufThisRoundByCard(KeywordBuf.Protection, 1, base.owner);
+            }
+        }
+    }
+
+    public class DiceCardAbility_tsu00D2randombreakprptection : DiceCardAbilityBase
+    {
+        public static string Desc = "[的中時]ランダムな味方1名に今回の幕に混乱保護1を付与";
+        public override string[] Keywords => new string[1] { "BreakProtection_Keyword" };
+        public override void OnSucceedAttack()
+        {
+            foreach (BattleUnitModel item in BattleObjectManager.instance.GetAliveList_random(base.owner.faction, 2))
+            {
+                item.bufListDetail.AddKeywordBufThisRoundByCard(KeywordBuf.BreakProtection, 1, base.owner);
+            }
+        }
+    }
 }
 
 namespace パッシブ
-//public class PassiveAbility_tsu00P数"パッシブ名" : PassiveAbilityBase
 {
-    public class PassiveAbility_tsu00P1Gomonsword : PassiveAbilityBase
-    //斬撃威力+1。攻撃が的中した時、火傷1または出血1を付与。
+    public class PassiveAbility_tsu00P1AllForUnite : PassiveAbilityBase
+    //結束ページを使用するとき、全ダイスの最小値+2。感情レベルが3以上なら追加で全ダイスの最大値+1。
     {
+        public override void BeforeRollDice(BattleDiceBehavior curcard)
+        {
+            if (curcard.card.cardAbility != null && curcard.card.cardAbility.IsUniteCard)
+            {
+                int min = 2;
+                int max = 0;
 
-        public override void BeforeRollDice(BattleDiceBehavior behavior)
-        {
-            if (behavior.Detail == BehaviourDetail.Slash)
-            {
-                owner.ShowPassiveTypo(this);
-                behavior.ApplyDiceStatBonus(new DiceStatBonus
+                if (this.owner.emotionDetail.EmotionLevel >= 3)
                 {
-                    power = 1
-                });
-            }
-        }
-        public override void OnSucceedAttack(BattleDiceBehavior behavior)
-        {
-            if (RandomUtil.valueForProb < 0.5)
-            {
-                owner.battleCardResultLog?.SetPassiveAbility(this);
-                behavior.card.target?.bufListDetail.AddKeywordBufThisRoundByEtc(KeywordBuf.Burn, 1, owner);
-            }
-            else
-            {
-                owner.battleCardResultLog?.SetPassiveAbility(this);
-                behavior.card.target?.bufListDetail.AddKeywordBufThisRoundByEtc(KeywordBuf.Bleeding, 1, owner);
-            }
-        }
-    }
-
-    public class PassiveAbility_tsu00P2Gomonlance : PassiveAbilityBase
-    //貫通威力+1。貫通ダメージ量+2
-    {
-        public override void BeforeRollDice(BattleDiceBehavior behavior)
-        {
-            if (behavior.Detail == BehaviourDetail.Penetrate)
-            {
-                owner.ShowPassiveTypo(this);
-                behavior.ApplyDiceStatBonus(new DiceStatBonus
+                    max = 1;
+                }
+                curcard.ApplyDiceStatBonus(new DiceStatBonus
                 {
-                    power = 1,
-                    dmg = 2
+                    min = min,
+                    max = max
                 });
             }
         }
     }
 
-    public class PassiveAbility_tsu00P3Gomongun : PassiveAbilityBase
-    //遠距離ダイスの威力+1。遠距離ダイスの混乱ダメージ+2
+
+    public class PassiveAbility_tsu00P2UniteForAll : PassiveAbilityBase
+    // 結束ページで自分にパワー、忍耐、保護、混乱保護が付与されるとき、他のランダムな味方1人に同じバフを付与
     {
-        public class DiceCardAbility_Gomongun : DiceCardAbilityBase
-        {
-            private PassiveAbility_tsu00P3Gomongun _passive;
-
-            public DiceCardAbility_Gomongun(PassiveAbility_tsu00P3Gomongun pgun)
-            {
-                _passive = pgun;
-            }
-
-            public override void BeforeRollDice()
-            {
-                behavior.ApplyDiceStatBonus(new DiceStatBonus
-                {
-                    power = 1,
-                    breakDmg = 2
-                });
-                base.owner.battleCardResultLog?.SetPassiveAbility(_passive);
-            }
-        }
+        private bool _isUsingUniteCard = false;
 
         public override void OnUseCard(BattlePlayingCardDataInUnitModel curCard)
         {
-            if (curCard.card.GetSpec().Ranged == CardRange.Far)
+            _isUsingUniteCard = curCard.cardAbility != null && curCard.cardAbility.IsUniteCard;
+            base.OnUseCard(curCard);
+        }
+
+        public override void OnAddKeywordBufByCardForEvent(KeywordBuf keywordBuf, int stack, BufReadyType readyType)
+        {
+            if (!_isUsingUniteCard) return;
+
+            if (keywordBuf != KeywordBuf.Strength &&
+                keywordBuf != KeywordBuf.Endurance &&
+                keywordBuf != KeywordBuf.Protection &&
+                keywordBuf != KeywordBuf.BreakProtection)
             {
-                curCard.ApplyDiceAbility(DiceMatch.AllDice, new DiceCardAbility_Gomongun(this));
+                return;
+            }
+
+            List<BattleUnitModel> aliveList = BattleObjectManager.instance.GetAliveList(owner.faction);
+            aliveList.Remove(owner);
+
+            for (int i = 0; i < 1 && aliveList.Count > 0; i++)
+            {
+                BattleUnitModel target = RandomUtil.SelectOne(aliveList);
+
+                switch (readyType)
+                {
+                    case BufReadyType.ThisRound:
+                        target.bufListDetail.AddKeywordBufByEtc(keywordBuf, stack);
+                        owner.UnitData.historyInWave.ch7oneforall++;
+                        break;
+                    case BufReadyType.NextRound:
+                        target.bufListDetail.AddKeywordBufByEtc(keywordBuf, stack);
+                        owner.UnitData.historyInWave.ch7oneforall++;
+                        break;
+                    case BufReadyType.NextNextRound:
+                        Debug.LogError("invalid ready Type");
+                        break;
+                }
             }
         }
     }
 
-    public class PassiveAbility_tsu00P4Gomonarrow : PassiveAbilityBase
-    //遠距離ダイスの威力+1。遠距離ダイスのダメージ量+1
+    public class PassiveAbility_tsu00P3UniqueCountpower : PassiveAbilityBase
+    //1幕の間結束ページを使用した枚数に応じて次の幕にバフを得る。2枚:自身にパワー1付与　3枚:自身にパワー2、忍耐1付与　4枚以上:味方全体にパワー2、忍耐2付与
     {
-        public class DiceCardAbility_Gomonarrow : DiceCardAbilityBase
-        {
-            private PassiveAbility_tsu00P4Gomonarrow _passive;
-
-            public DiceCardAbility_Gomonarrow(PassiveAbility_tsu00P4Gomonarrow parrow)
-            {
-                _passive = parrow;
-            }
-
-            public override void BeforeRollDice()
-            {
-                behavior.ApplyDiceStatBonus(new DiceStatBonus
-                {
-                    power = 1,
-                    dmg = 2
-                });
-                base.owner.battleCardResultLog?.SetPassiveAbility(_passive);
-            }
-        }
+        private int _uniteCardUsedCount = 0;
 
         public override void OnUseCard(BattlePlayingCardDataInUnitModel curCard)
         {
-            if (curCard.card.GetSpec().Ranged == CardRange.Far)
+            if (curCard.cardAbility != null && curCard.cardAbility.IsUniteCard)
             {
-                curCard.ApplyDiceAbility(DiceMatch.AllDice, new DiceCardAbility_Gomonarrow(this));
+                _uniteCardUsedCount++;
             }
-
         }
-    }
 
-    public class PassiveAbility_tsu00P5Gomonglove : PassiveAbilityBase
-    //打撃威力+1。打撃混乱ダメージ量+2
-    {
-        public override void BeforeRollDice(BattleDiceBehavior behavior)
+        public override void OnRoundEnd()
         {
-            if (behavior.Detail == BehaviourDetail.Hit)
+            if (_uniteCardUsedCount == 2)
             {
-                owner.ShowPassiveTypo(this);
-                behavior.ApplyDiceStatBonus(new DiceStatBonus
+                owner.bufListDetail.AddKeywordBufByEtc(KeywordBuf.Strength, 1);
+            }
+            else if (_uniteCardUsedCount == 3)
+            {
+                owner.bufListDetail.AddKeywordBufByEtc(KeywordBuf.Strength, 2);
+                owner.bufListDetail.AddKeywordBufByEtc(KeywordBuf.Endurance, 1);
+            }
+            else if (_uniteCardUsedCount >= 4)
+            {
+                foreach (BattleUnitModel alive in BattleObjectManager.instance.GetAliveList(owner.faction))
                 {
-                    power = 1,
-                    breakDmg = 2
-                });
+                    alive.bufListDetail.AddKeywordBufByEtc(KeywordBuf.Strength, 2);
+                    alive.bufListDetail.AddKeywordBufByEtc(KeywordBuf.Endurance, 2);
+                }
             }
+            _uniteCardUsedCount = 0;
         }
     }
 
-    public class PassiveAbility_tsu00P6BreakunitandEGO : PassiveAbilityBase
-    //幕の開始時、虚弱と武装解除を5づつ得る。(虚弱の値+1)パワー、(武装解除の値+1)忍耐を得る。
+
+    public class PassiveAbility_tsu00P4UniqueCountprotection : PassiveAbilityBase
+    //1幕の間結束ページを使用した枚数に応じて次の幕にバフを得る。2枚:自身に保護1付与　3枚:自身に保護2、混乱保護1付与　4枚以上:味方全体に保護2、混乱保護2付与
     {
-        public override void OnRoundStart()
+        private int _uniteCardUsedCount = 0;
+
+        public override void OnUseCard(BattlePlayingCardDataInUnitModel curCard)
         {
-            owner.bufListDetail.AddKeywordBufThisRoundByEtc(KeywordBuf.Weak, 5, owner);
-            owner.bufListDetail.AddKeywordBufThisRoundByEtc(KeywordBuf.Disarm, 5, owner);
-
-            int weakstack = owner.bufListDetail.GetKewordBufStack(KeywordBuf.Weak);
-            int disarmstack = owner.bufListDetail.GetKewordBufStack(KeywordBuf.Disarm);
-
-
-            owner.bufListDetail.AddKeywordBufThisRoundByEtc(KeywordBuf.Strength, weakstack + 1);
-            owner.bufListDetail.AddKeywordBufThisRoundByEtc(KeywordBuf.Endurance, disarmstack + 1);
-        }
-    }
-
-    public class BattleUnitBuf_counterDicegard : BattleUnitBuf
-    {
-        protected override string keywordId => "counterDicegard";
-
-        public override void OnAfterRollSpeedDice()
-        {
-            DiceCardXmlInfo cardItem = ItemXmlDataList.instance.GetCardItem(new LorId("Gomonkai", 10));
-            new DiceBehaviour();
-            List<BattleDiceBehavior> list = new List<BattleDiceBehavior>();
-            int num = 0;
-            foreach (DiceBehaviour diceBehaviour in cardItem.DiceBehaviourList)
+            if (curCard.cardAbility != null && curCard.cardAbility.IsUniteCard)
             {
-                BattleDiceBehavior battleDiceBehavior = new BattleDiceBehavior();
-                battleDiceBehavior.behaviourInCard = diceBehaviour.Copy();
-                battleDiceBehavior.behaviourInCard.Min = 3;
-                battleDiceBehavior.behaviourInCard.Dice = 5;
-                battleDiceBehavior.SetIndex(num++);
-                list.Add(item: battleDiceBehavior);
+                _uniteCardUsedCount++;
             }
-            _owner.cardSlotDetail.keepCard.AddBehaviours(cardItem, list);
         }
         public override void OnRoundEnd()
         {
-            Destroy();
+            if (_uniteCardUsedCount == 2)
+            {
+                owner.bufListDetail.AddKeywordBufByEtc(KeywordBuf.Protection, 1);
+            }
+            else if (_uniteCardUsedCount == 3)
+            {
+                owner.bufListDetail.AddKeywordBufByEtc(KeywordBuf.Protection, 2);
+                owner.bufListDetail.AddKeywordBufByEtc(KeywordBuf.BreakProtection, 1);
+            }
+            else if (_uniteCardUsedCount >= 4)
+            {
+                foreach (BattleUnitModel alive in BattleObjectManager.instance.GetAliveList(owner.faction))
+                {
+                    alive.bufListDetail.AddKeywordBufByEtc(KeywordBuf.Protection, 2);
+                    alive.bufListDetail.AddKeywordBufByEtc(KeywordBuf.BreakProtection, 2);
+                }
+            }
+            _uniteCardUsedCount = 0;
         }
     }
 
-    public class PassiveAbility_tsu00P7CounterStrike : PassiveAbilityBase
+    public class PassiveAbility_tsu00P4UniteForAllextend : PassiveAbilityBase
+    // 結束ページで自分にパワー、忍耐、保護、混乱保護が付与されるとき、他のランダムな味方2人に同じバフを付与
     {
-        public override void OnRoundStart()
+        private bool _isUsingUniteCard = false;
+
+        public override void OnUseCard(BattlePlayingCardDataInUnitModel curCard)
         {
+            _isUsingUniteCard = curCard.cardAbility != null && curCard.cardAbility.IsUniteCard;
+            base.OnUseCard(curCard);
+        }
+
+        public override void OnAddKeywordBufByCardForEvent(KeywordBuf keywordBuf, int stack, BufReadyType readyType)
+        {
+            if (!_isUsingUniteCard) return;
+
+            if (keywordBuf != KeywordBuf.Strength &&
+                keywordBuf != KeywordBuf.Endurance &&
+                keywordBuf != KeywordBuf.Protection &&
+                keywordBuf != KeywordBuf.BreakProtection)
+            {
+                return;
+            }
+
             List<BattleUnitModel> aliveList = BattleObjectManager.instance.GetAliveList(owner.faction);
-            BattleUnitModel target = RandomUtil.SelectOne(aliveList);
-            if (!target.bufListDetail.HasBuf<BattleUnitBuf_counterDicegard>())
+            aliveList.Remove(owner);
+
+            for (int i = 0; i < 2 && aliveList.Count > 0; i++)
             {
-                target.bufListDetail.AddBuf(new BattleUnitBuf_counterDicegard());
+                BattleUnitModel target = RandomUtil.SelectOne(aliveList);
+
+                switch (readyType)
+                {
+                    case BufReadyType.ThisRound:
+                        target.bufListDetail.AddKeywordBufByEtc(keywordBuf, stack);
+                        owner.UnitData.historyInWave.ch7oneforall++;
+                        break;
+                    case BufReadyType.NextRound:
+                        target.bufListDetail.AddKeywordBufByEtc(keywordBuf, stack);
+                        owner.UnitData.historyInWave.ch7oneforall++;
+                        break;
+                    case BufReadyType.NextNextRound:
+                        Debug.LogError("invalid ready Type");
+                        break;
+                }
             }
         }
     }
 
-
-    public class PassiveAbility_tsu00P8gogyou : PassiveAbilityBase
-    // 五行ページを追加する。
-    {
-        private int _sui = 50001;
-        private int _kin = 50002;
-        private int _moku = 50003;
-        private int _ka = 50004;
-        private int _do = 50005;
-        private List<int> _onlyenemy = new List<int>();
-
-        public override void OnRoundStart()
-        {
-            if (owner.faction == Faction.Player)
-            {
-                List<BattleDiceCardModel> hand = owner.personalEgoDetail.GetHand();
-                bool flag = hand.Exists((BattleDiceCardModel x) => x.GetID() == new LorId("Gomonkai", _sui));
-                bool flag2 = hand.Exists((BattleDiceCardModel x) => x.GetID() == new LorId("Gomonkai", _kin));
-                bool flag3 = hand.Exists((BattleDiceCardModel x) => x.GetID() == new LorId("Gomonkai", _moku));
-                bool flag4 = hand.Exists((BattleDiceCardModel x) => x.GetID() == new LorId("Gomonkai", _ka));
-                bool flag5 = hand.Exists((BattleDiceCardModel x) => x.GetID() == new LorId("Gomonkai", _do));
-                if (!flag && !flag2 && !flag3 && !flag4 && !flag5)
-                {
-                    owner.personalEgoDetail.AddCard(new LorId("Gomonkai", 50001));
-                    owner.personalEgoDetail.AddCard(new LorId("Gomonkai", 50002));
-                    owner.personalEgoDetail.AddCard(new LorId("Gomonkai", 50003));
-                    owner.personalEgoDetail.AddCard(new LorId("Gomonkai", 50004));
-                    owner.personalEgoDetail.AddCard(new LorId("Gomonkai", 50005));
-                }
-            }
-        }
-
-        public override void OnRoundStartAfter()
-        {
-            if (owner.faction == Faction.Enemy && owner.RollSpeedDice().FindAll((SpeedDice x) => !x.breaked).Count > 0 && !owner.IsBreakLifeZero())
-            {
-                bool flag = _onlyenemy.Exists((int x) => x == _sui);
-                bool flag2 = _onlyenemy.Exists((int x) => x == _kin);
-                bool flag3 = _onlyenemy.Exists((int x) => x == _moku);
-                bool flag4 = _onlyenemy.Exists((int x) => x == _ka);
-                bool flag5 = _onlyenemy.Exists((int x) => x == _do);
-                if (!flag && !flag2 && !flag3 && !flag4 && !flag5)
-                {
-                    _onlyenemy.Add(_sui);
-                    _onlyenemy.Add(_kin);
-                    _onlyenemy.Add(_moku);
-                    _onlyenemy.Add(_ka);
-                    _onlyenemy.Add(_do);
-                }
-                int gogyou = RandomUtil.SelectOne(_onlyenemy);
-                if (gogyou == _sui)
-                {
-                    DiceCardSelfAbility_tsu00C1gogyousui.Activate(owner);
-                }
-                if (gogyou == _kin)
-                {
-                    DiceCardSelfAbility_tsu00C2gogyoukin.Activate(owner);
-                }
-                if (gogyou == _moku)
-                {
-                    DiceCardSelfAbility_tsu00C3gogyoumoku.Activate(owner);
-                }
-                if (gogyou == _ka)
-                {
-                    DiceCardSelfAbility_tsu00C4gogyouka.Activate(owner);
-                }
-                if (gogyou == _do)
-                {
-                    DiceCardSelfAbility_tsu00C5gogyoudo.Activate(owner);
-                }
-                _onlyenemy.Remove(gogyou);
-            }
-        }
-    }
-    public class PassiveAbility_tsu00P9kioku : PassiveAbilityBase
-    //「追憶」バフを得る(最大15)。追憶ページでマッチに敗北すると「追憶」を1失う。「追憶」のスタックに応じでバフを得る。記憶が0になると全ての耐性が脆弱になる
-    {
-
-    }
 }
 
-
-namespace カード効果
-//public class DiceCardSelfAbility_tsu00C1"カード効果名" : DiceCardSelfAbilityBase
-
+namespace カード
 {
-    public class BattleUnitBuf_tsu00BU1addsinking : BattleUnitBuf
-    //的中時に沈潜1付与
+    public class DiceCardSelfAbility_tsu00UniteC1NextPower : DiceCardSelfAbilityBase
     {
-        protected override string keywordId => "Gogyou_sui";
-        public override void OnSuccessAttack(BattleDiceBehavior behavior)
-        {
-            behavior.card.target?.bufListDetail.AddKeywordBufByEtc(RedFrogKeywordBuf.R_Sinking, 1, _owner);
-        }
+        public static string Desc = "[結束ページ]" +
+            "[戦闘開始時]今回の幕の間、他の味方全体に「結束ページを使用時、次の幕にパワー1を得る(重複しない)」を追加」";
+        public override string[] Keywords => new string[1] { "Strength_Keyword" };
+        public override bool IsUniteCard => true;
 
-        public override void OnRoundEnd()
+        public class BattleunitBuf_C1NextPower : BattleUnitBuf
         {
-            Destroy();
-        }
-    }
-    public class BattleUnitBuf_tsu00BU2nodmg : BattleUnitBuf
-    //ダメージを与えない,ダイスの本来の値÷2回復(小数点以下切り捨て
-    {
-        protected override string keywordId => "Gogyou_kin";
-        public override void BeforeRollDice(BattleDiceBehavior behavior)
-        {
-            behavior.ApplyDiceStatBonus(new DiceStatBonus
+            public override void OnUseCard(BattlePlayingCardDataInUnitModel card)
             {
-                dmgRate = -9999,
-                breakRate = -9999
-            });
-        }
-        public override void OnSuccessAttack(BattleDiceBehavior behavior)
-        {
-            int healamount = behavior.DiceVanillaValue / 2;
-            if (healamount > 0)
+                if (card.cardAbility != null && card.cardAbility.IsUniteCard)
+                {
+                    this._owner.bufListDetail.AddKeywordBufByCard(KeywordBuf.Strength, 1, base._owner);
+                }
+            }
+            public override void OnRoundEnd()
             {
-                _owner.RecoverHP(healamount);
-                healamount = 0;
+                this.Destroy();
+            }
+
+        }
+        public override void OnStartBattle()
+        {
+            foreach (BattleUnitModel alive in
+                BattleObjectManager.instance.GetAliveList(base.owner.faction))
+            {
+                if (alive != base.owner && !alive.bufListDetail.HasBuf<BattleunitBuf_C1NextPower>())
+                {
+                    alive.bufListDetail.AddBuf(new BattleunitBuf_C1NextPower());
+
+                }
             }
         }
     }
 
-    public class BattleUnitBuf_tsu00BU4ignorepower : BattleUnitBuf
-    //互いに威力の効果を受けない
+    public class DiceCardSelfAbility_tsu00UniteC2NextEndurance : DiceCardSelfAbilityBase
     {
-        protected override string keywordId => "Gogyou_do";
-        public override void OnUseCard(BattlePlayingCardDataInUnitModel card)
+        public static string Desc = "[結束ページ]" +
+            "[戦闘開始時]今回の幕の間、他の味方全体に「結束ページを使用時、次の幕に忍耐1を得る(重複しない)」を付与";
+        public override string[] Keywords => new string[1] { "Endurance_Keyword" };
+        public override bool IsUniteCard => true;
+
+        public class BattleunitBuf_C2NextEndurance : BattleUnitBuf
         {
-            card.ignorePower = true;
-        }
-        public override void OnStartParrying(BattlePlayingCardDataInUnitModel card)
-        {
-            BattleUnitModel target = card.target;
-            if (target != null && target.currentDiceAction != null)
+            public override void OnUseCard(BattlePlayingCardDataInUnitModel card)
             {
-                target.currentDiceAction.ignorePower = true;
+                if (card.cardAbility != null && card.cardAbility.IsUniteCard)
+                {
+                    this._owner.bufListDetail.AddKeywordBufByCard(KeywordBuf.Endurance, 1, base._owner);
+                }
+            }
+            public override void OnRoundEnd()
+            {
+                this.Destroy();
+            }
+
+        }
+        public override void OnStartBattle()
+        {
+            foreach (BattleUnitModel alive in
+                BattleObjectManager.instance.GetAliveList(base.owner.faction))
+            {
+                if (alive != base.owner && !alive.bufListDetail.HasBuf<BattleunitBuf_C2NextEndurance>())
+                {
+                    alive.bufListDetail.AddBuf(new BattleunitBuf_C2NextEndurance());
+
+                }
             }
         }
     }
 
-    public class BattleUnitBuf_gogyouCommon : BattleUnitBuf
+    public class DiceCardSelfAbility_tsu00UniteC3NextProtection : DiceCardSelfAbilityBase
     {
-        public BattleUnitBuf_gogyouCommon()
+        public static string Desc = "[結束ページ]" +
+            "[戦闘開始時]今回の幕の間、他の味方全体に「結束ページを使用時、次の幕に保護1を得る(重複しない)」を付与";
+        public override string[] Keywords => new string[1] { "Protection_Keyword" };
+        public override bool IsUniteCard => true;
+
+        public class BattleunitBuf_C3NextProtection : BattleUnitBuf
         {
-            stack = 0;
+            public override void OnUseCard(BattlePlayingCardDataInUnitModel card)
+            {
+                if (card.cardAbility != null && card.cardAbility.IsUniteCard)
+                {
+                    this._owner.bufListDetail.AddKeywordBufByCard(KeywordBuf.Protection, 1, base._owner);
+                }
+            }
+            public override void OnRoundEnd()
+            {
+                this.Destroy();
+            }
+
         }
-        public override void OnRoundEnd()
+        public override void OnStartBattle()
         {
-            Destroy();
+            foreach (BattleUnitModel alive in
+                BattleObjectManager.instance.GetAliveList(base.owner.faction))
+            {
+                if (alive != base.owner && !alive.bufListDetail.HasBuf<BattleunitBuf_C3NextProtection>())
+                {
+                    alive.bufListDetail.AddBuf(new BattleunitBuf_C3NextProtection());
+
+                }
+            }
         }
     }
 
-    public class DiceCardSelfAbility_tsu00gogyouCommon : DiceCardSelfAbilityBase
+    public class DiceCardSelfAbility_tsu00UniteC4NextBreakProtection : DiceCardSelfAbilityBase
     {
-        public override bool OnChooseCard(BattleUnitModel owner)
+        public static string Desc = "[結束ページ]" +
+            "[戦闘開始時]今回の幕の間、他の味方全体に「結束ページを使用時、次の幕に混乱保護1を得る(重複しない)」を付与";
+        public override string[] Keywords => new string[1] { "BreakProtection_Keyword" };
+        public override bool IsUniteCard => true;
+
+        public class BattleunitBuf_C4NextBreakProtection : BattleUnitBuf
         {
-            return !owner.bufListDetail.HasBuf<BattleUnitBuf_gogyouCommon>();
+            public override void OnUseCard(BattlePlayingCardDataInUnitModel card)
+            {
+                if (card.cardAbility != null && card.cardAbility.IsUniteCard)
+                {
+                    this._owner.bufListDetail.AddKeywordBufByCard(KeywordBuf.BreakProtection, 1, base._owner);
+                }
+            }
+            public override void OnRoundEnd()
+            {
+                this.Destroy();
+            }
+
+        }
+        public override void OnStartBattle()
+        {
+            foreach (BattleUnitModel alive in
+                BattleObjectManager.instance.GetAliveList(base.owner.faction))
+            {
+                if (alive != base.owner && !alive.bufListDetail.HasBuf<BattleunitBuf_C4NextBreakProtection>())
+                {
+                    alive.bufListDetail.AddBuf(new BattleunitBuf_C4NextBreakProtection());
+
+                }
+            }
         }
     }
 
-    public class DiceCardSelfAbility_tsu00C1gogyousui : DiceCardSelfAbility_tsu00gogyouCommon
+    public class DiceCardSelfAbility_tsu00UniteC5Preparation : DiceCardSelfAbilityBase
     {
-        public static string Desc = "五行ページは1幕に1回のみ使用可能。まだ使用していない他の五行ページを全て使用した後に再度使用可能" +
-            "[装着時発動]この幕の間パワー1を得る。攻撃的中時に沈潜1を付与";
-        public override string[] Keywords => new string[2] { "Strength_Keyword", "RedFrog_Sinking" };
-        public override void OnUseInstance(BattleUnitModel unit, BattleDiceCardModel self, BattleUnitModel targetUnit)
+        public static string Desc = "[結束ページ]" +
+            "[戦闘開始時]今回の幕の間、他の味方全体に「結束ページを使用時、そのページに反撃ダイス(3-7)を追加(重複しない)」を付与";
+        public class BattleUnitBuf_C5Preparation : BattleUnitBuf
         {
-            DiceCardSelfAbility_tsu00C1gogyousui.Activate(unit);
-            SingletonBehavior<BattleManagerUI>.Instance.ui_unitListInfoSummary.UpdateCharacterProfileAll();
-            self.exhaust = true;
+            public override void OnUseCard(BattlePlayingCardDataInUnitModel card)
+            {
+                if (card.cardAbility == null || !card.cardAbility.IsUniteCard)
+                {
+                    return;
+                }
+                new BattleDiceBehavior();
+                BattleDiceCardModel battleDiceCardModel = BattleDiceCardModel.CreatePlayingCard(ItemXmlDataList.instance.GetCardItem(new LorId("Yui_Workshop", 8), false));
+                if (battleDiceCardModel == null)
+                {
+                    return;
+                }
+                foreach (BattleDiceBehavior item in battleDiceCardModel.CreateDiceCardBehaviorList())
+                {
+                    card.AddDice(item);
+                }
+            }
+
+            public override void OnRoundEnd()
+            {
+                Destroy();
+            }
         }
-        public static void Activate(BattleUnitModel unit)
+
+        public override bool IsUniteCard => true;
+
+        public override void OnStartBattle()
         {
-            unit.bufListDetail.AddKeywordBufThisRoundByCard(KeywordBuf.Strength, 1, unit);
-            unit.bufListDetail.AddBuf(new BattleUnitBuf_tsu00BU1addsinking());
-            unit.bufListDetail.AddBuf(new BattleUnitBuf_gogyouCommon());
+            foreach (BattleUnitModel alive in BattleObjectManager.instance.GetAliveList(base.owner.faction))
+            {
+                if (alive != base.owner && !alive.bufListDetail.HasBuf<BattleUnitBuf_C5Preparation>())
+                {
+                    alive.bufListDetail.AddBuf(new BattleUnitBuf_C5Preparation());
+                }
+            }
         }
     }
 
-    public class DiceCardSelfAbility_tsu00C2gogyoukin : DiceCardSelfAbility_tsu00gogyouCommon
+    public class DiceCardSelfAbility_tsu00UniteC6DiscardDraw : DiceCardSelfAbilityBase
     {
-        public static string Desc = "五行ページは1幕に1回のみ使用可能。まだ使用していない他の五行ページを全て使用した後に再度使用可能" +
-            "[装着時発動]この幕に保護1を得る。攻撃ダイスはダメージを与えることが出来ない。" +
-            "代わりに、バフを差し引いたダイスの値の半分だけ体力を回復することが出来る。(小数点以下切り捨て)";
-        public override string[] Keywords => new string[1] { "Protection" };
-        public override void OnUseInstance(BattleUnitModel unit, BattleDiceCardModel self, BattleUnitModel targetUnit)
+        public static string Desc = "[結束ページ]" +
+            "[戦闘開始時]今回の幕の間、他の味方全員に「結束ページを使用時、ページをランダムに1枚捨て、次の幕の開始時にページを2枚引く(重複しない)」を付与」";
+        public override string[] Keywords => new string[1] { "DrawCard_Keyword" };
+        public override bool IsUniteCard => true;
+
+        public class BattleunitBuf_C6DiscardDraw : BattleUnitBuf
         {
-            DiceCardSelfAbility_tsu00C2gogyoukin.Activate(unit);
-            SingletonBehavior<BattleManagerUI>.Instance.ui_unitListInfoSummary.UpdateCharacterProfileAll();
-            self.exhaust = true;
+            public override void OnUseCard(BattlePlayingCardDataInUnitModel card)
+            {
+                if (card.cardAbility != null && card.cardAbility.IsUniteCard)
+                {
+                    base._owner.allyCardDetail.DiscardACardRandomlyByAbility(1);
+                }
+            }
+            public override void OnRoundEnd()
+            {
+                _owner.allyCardDetail.DrawCards(2);
+                Destroy();
+            }
         }
-        public static void Activate(BattleUnitModel unit)
+
+        public override void OnStartBattle()
         {
-            unit.bufListDetail.AddKeywordBufThisRoundByCard(KeywordBuf.Protection, 1, unit);
-            unit.bufListDetail.AddBuf(new BattleUnitBuf_tsu00BU2nodmg());
-            unit.bufListDetail.AddBuf(new BattleUnitBuf_gogyouCommon());
+            foreach (BattleUnitModel alive in
+                BattleObjectManager.instance.GetAliveList(base.owner.faction))
+            {
+                if (alive != base.owner && !alive.bufListDetail.HasBuf<BattleunitBuf_C6DiscardDraw>())
+                {
+                    alive.bufListDetail.AddBuf(new BattleunitBuf_C6DiscardDraw());
+                }
+            }
         }
     }
 
-    public class DiceCardSelfAbility_tsu00C3gogyoumoku : DiceCardSelfAbility_tsu00gogyouCommon
+    public class DiceCardSelfAbility_tsu00UniteC7highlander : DiceCardSelfAbilityBase
     {
-        public static string Desc = "五行ページは1幕に1回のみ使用可能。まだ使用していない他の五行ページを全て使用した後に再度使用可能" +
-            "[装着時発動]この幕に";
-        public override string[] Keywords => new string[] { "" };
-        public override void OnUseInstance(BattleUnitModel unit, BattleDiceCardModel self, BattleUnitModel targetUnit)
+        public static string Desc = "[結束ページ]" +
+            "[戦闘開始時]今回の幕の間、他の味方全員に「結束ページを使用時、唯一状態なら全ダイス威力+2(重複しない)」を付与」";
+        public override string[] Keywords => new string[1] { "OnlyOne_Keyword" };
+        public override bool IsUniteCard => true;
+        public class BattleunitBuf_C7highlander : BattleUnitBuf
         {
-            DiceCardSelfAbility_tsu00C3gogyoumoku.Activate(unit);
-            SingletonBehavior<BattleManagerUI>.Instance.ui_unitListInfoSummary.UpdateCharacterProfileAll();
-            self.exhaust = true;
+            public override void OnUseCard(BattlePlayingCardDataInUnitModel card)
+            {
+                if (card.cardAbility != null && card.cardAbility.IsUniteCard && base._owner.allyCardDetail.IsHighlander())
+                {
+                    card.ApplyDiceStatBonus(DiceMatch.AllDice, new DiceStatBonus
+                    {
+                        power = 2
+                    });
+                }
+            }
+
         }
-        public static void Activate(BattleUnitModel unit)
+        public override void OnStartBattle()
         {
-            unit.bufListDetail.AddBuf(new BattleUnitBuf_gogyouCommon());
+            foreach (BattleUnitModel alive in
+                BattleObjectManager.instance.GetAliveList(base.owner.faction))
+            {
+                if (alive != base.owner && !alive.bufListDetail.HasBuf<BattleunitBuf_C7highlander>())
+                {
+                    alive.bufListDetail.AddBuf(new BattleunitBuf_C7highlander());
+                }
+            }
         }
     }
 
-    public class DiceCardSelfAbility_tsu00C4gogyouka : DiceCardSelfAbility_tsu00gogyouCommon
+    public class DiceCardSelfAbility_tsu00UniteC9HealLightdraw : DiceCardSelfAbilityBase
     {
-        public static string Desc = "五行ページは1幕に1回のみ使用可能。まだ使用していない他の五行ページを全て使用した後に再度使用可能" +
-            "[装着時発動]この幕に";
-        public override string[] Keywords => new string[] { "" };
-        public override void OnUseInstance(BattleUnitModel unit, BattleDiceCardModel self, BattleUnitModel targetUnit)
-        {
-            DiceCardSelfAbility_tsu00C4gogyouka.Activate(unit);
-            SingletonBehavior<BattleManagerUI>.Instance.ui_unitListInfoSummary.UpdateCharacterProfileAll();
-            self.exhaust = true;
-        }
-        public static void Activate(BattleUnitModel unit)
-        {
-            unit.bufListDetail.AddBuf(new BattleUnitBuf_gogyouCommon());
-        }
-    }
-    public class DiceCardSelfAbility_tsu00C5gogyoudo : DiceCardSelfAbility_tsu00gogyouCommon
-    {
-        public static string Desc = "五行ページは1幕に1回のみ使用可能。まだ使用していない他の五行ページを全て使用した後に再度使用可能" +
-            "[装着時発動]この幕の間このページを装着したキャラクターと、このキャラクターとマッチしたした相手は互いに威力の効果を受けない。";
-        public override void OnUseInstance(BattleUnitModel unit, BattleDiceCardModel self, BattleUnitModel targetUnit)
-        {
-            DiceCardSelfAbility_tsu00C5gogyoudo.Activate(unit);
-            SingletonBehavior<BattleManagerUI>.Instance.ui_unitListInfoSummary.UpdateCharacterProfileAll();
-            self.exhaust = true;
-        }
-        public static void Activate(BattleUnitModel unit)
-        {
-            unit.bufListDetail.AddBuf(new BattleUnitBuf_tsu00BU4ignorepower());
-            unit.bufListDetail.AddBuf(new BattleUnitBuf_gogyouCommon());
+        public static string Desc = "[結束ページ]" +
+            "[戦闘開始時]今回の幕の間、他の味方全員に「結束ページを使用時、光1回復、ページ1枚を引く(重複しない)」を付与";
+        public override string[] Keywords => new string[2] { "Energy_Keyword", "DrawCard_Keyword" };
 
-        }
-    }
-    public class DiceCardSelfAbility_tsu00C6gogyouranbu : DiceCardSelfAbility_tsu00gogyouCommon
-    {
-        public static string Desc = "この幕に五行ページを使用した場合、このダイスを4回再使用";
-        public override void BeforeRollDice(BattleDiceBehavior behavior)
-        {
+        public override bool IsUniteCard => true;
 
+        public class BattleunitBuf_C8HealLight : BattleUnitBuf
+        {
+            public override void OnUseCard(BattlePlayingCardDataInUnitModel card)
+            {
+                if (card.cardAbility != null && card.cardAbility.IsUniteCard)
+                {
+                    base._owner.cardSlotDetail.RecoverPlayPointByCard(1);
+                    base._owner.allyCardDetail.DrawCards(1);
+                }
+            }
+            public override void OnRoundEnd()
+            {
+                Destroy();
+            }
+        }
+
+        public override void OnStartBattle()
+        {
+            foreach (BattleUnitModel alive in BattleObjectManager.instance.GetAliveList(base.owner.faction))
+            {
+                if (alive != base.owner && !alive.bufListDetail.HasBuf<BattleunitBuf_C8HealLight>())
+                {
+                    alive.bufListDetail.AddBuf(new BattleunitBuf_C8HealLight());
+                }
+            }
         }
     }
 
+    public class DiceCardSelfAbility_tsu00UniteC10heallight : DiceCardSelfAbilityBase
+    {
+        public static string Desc = "[結束ページ]" +
+            "[使用時]光1回復";
+        public override string[] Keywords => new string[1] { "Energy_Keyword" };
+
+        public override bool IsUniteCard => true;
+        public override void OnUseCard()
+        {
+            base.owner.cardSlotDetail.RecoverPlayPointByCard(1);
+        }
+    }
 }
